@@ -679,7 +679,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40f78c46d845a0e4a96c3f16e44065d1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _androidAdUnitId: Banner_Android
+  _androidAdUnitId: Interstitial_Android
   _iOsAdUnitId: Interstitial_iOS
 --- !u!114 &1380119969
 MonoBehaviour:
@@ -693,9 +693,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1a80834eb0f36147a833e66002d9378, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _androidGameId: 
+  _androidGameId: 5483371
   _iOSGameId: 5483370
-  _testMode: 1
+  _testMode: 0
 --- !u!4 &1380119970
 Transform:
   m_ObjectHideFlags: 0
