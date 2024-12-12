@@ -1,54 +1,77 @@
-using UnityStandardAssets.CrossPlatformInput;
 using UnityEngine.InputSystem;
 using UnityEngine;
 using TMPro;
 
 public class WeaponSwitching : MonoBehaviour
 {
-    InputAction switching;
-    public int selectedWeapon = 0;
-    public TextMeshProUGUI ammoInfoText;
+    InputAction switching; // Acción de entrada para cambiar de arma
+    public int selectedWeapon = 0; // Arma seleccionada actualmente
+    public TextMeshProUGUI ammoInfoText; // Texto que muestra la información de munición
 
+    private Gun currentGun; // Referencia al arma actual
+
+    // Se ejecuta al inicio para configurar la acción de entrada
     void Start()
     {
-        switching = new InputAction("Scroll", binding: "<Mouse>/scroll");
-        switching.AddBinding("<Gamepad>/Dpad");
-        switching.Enable();
+        // Configura el InputAction para el desplazamiento del mouse y el D-pad del gamepad
+        switching = new InputAction("Switch", binding: "<Mouse>/scroll/y");
+        switching.AddBinding("<Gamepad>/dpad/y");
+        switching.Enable(); // Habilita la acción
 
-        SelectWeapon();
+        SelectWeapon(); // Selecciona el arma inicialmente
     }
 
-    // Update is called once per frame
+    // Se ejecuta en cada frame
     void Update()
     {
-        Gun gun = FindObjectOfType<Gun>();
-        ammoInfoText.text = gun.currentAmmo + " / " + gun.magazineAmmo;
-        
-        float scrollValue = switching.ReadValue<Vector2>().y;
+        // Actualiza la información de munición
+        currentGun = GetCurrentGun();
+        ammoInfoText.text = currentGun.currentAmmo + " / " + currentGun.magazineAmmo;
 
+        // Detecta el desplazamiento del mouse o del gamepad
+        float scrollValue = switching.ReadValue<float>();
+        Debug.Log("Scroll Value: " + scrollValue); // Debugging Scroll Value
         int previousSelected = selectedWeapon;
-        
-     
-        
-        if (CrossPlatformInputManager.GetButtonDown("Switch"))
+
+        // Cambia el arma hacia adelante o hacia atrás según el desplazamiento
+        if (scrollValue > 0f)
         {
             selectedWeapon++;
-            if (selectedWeapon == transform.childCount)
+            if (selectedWeapon >= transform.childCount)
                 selectedWeapon = 0;
         }
+        else if (scrollValue < 0f)
+        {
+            selectedWeapon--;
+            if (selectedWeapon < 0)
+                selectedWeapon = transform.childCount - 1;
+        }
 
-        if(previousSelected != selectedWeapon)
+        // Si se ha seleccionado un arma diferente, cambia el arma
+        if (previousSelected != selectedWeapon)
+        {
+            Debug.Log("Weapon Changed: " + selectedWeapon); // Debugging Weapon Change
             SelectWeapon();
-
+        }
     }
 
+    // Obtiene el arma actualmente seleccionada
+    private Gun GetCurrentGun()
+    {
+        Transform selectedWeaponTransform = transform.GetChild(selectedWeapon);
+        return selectedWeaponTransform.GetComponent<Gun>();
+    }
+
+    // Selecciona el arma activando solo la seleccionada
     private void SelectWeapon()
     {
-        foreach (Transform weapon in transform)
-        {    
-            if(ScoreManager.scoreCount == 500)
-            weapon.gameObject.SetActive(false);
+        // Desactiva todas las armas y activa solo la seleccionada
+        for (int i = 0; i < transform.childCount; i++)
+        {
+            transform.GetChild(i).gameObject.SetActive(i == selectedWeapon);
         }
-        transform.GetChild(selectedWeapon).gameObject.SetActive(true);
+
+        // Actualiza la referencia al arma seleccionada
+        currentGun = GetCurrentGun();
     }
 }

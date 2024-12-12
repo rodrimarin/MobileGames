@@ -23,6 +23,12 @@ public class PlayerMovement : MonoBehaviour
     InputAction ride;
 
     public FixedJoystick joystick;
+    public FixedJoystick rotationJoystick;
+
+    public float rotationSpeed = 100f;
+    public Transform cameraTransform;
+    private float verticalRotation = 0f;
+    public float verticalRotationLimit = 80f;
 
     void Start()
     {
@@ -36,31 +42,27 @@ public class PlayerMovement : MonoBehaviour
             .With("Down", "<keyboard>/s")
             .With("Down", "<keyboard>/downArrow")
             .With("Left", "<keyboard>/a")
-            .With("Left", "<keyboard>/letfArrow")
+            .With("Left", "<keyboard>/leftArrow")
             .With("Right", "<keyboard>/d")
             .With("Right", "<keyboard>/rightArrow");
 
         movement.Enable();
         jump.Enable();
-
     }
 
-    // Update is called once per frame
     void Update()
     {
-        //float x = Input.GetAxis("Horizontal");
-        //float z = Input.GetAxis("Vertical");
+        // Movement logic
         float x = joystick.Horizontal;
         float z = joystick.Vertical;
 
         animator.SetFloat("speed", Mathf.Abs(x) + Mathf.Abs(z));
 
         move = transform.right * x + transform.forward * z;
-
         controller.Move(move * speed * Time.deltaTime);
 
         isGrounded = Physics.CheckSphere(groundCheck.position, 0.3f, groundLayer);
-        
+
         if (isGrounded && velocity.y < 0)
             velocity.y = -1f;
 
@@ -75,31 +77,58 @@ public class PlayerMovement : MonoBehaviour
         {
             velocity.y += gravity * Time.deltaTime;
         }
-        
+
         controller.Move(velocity * Time.deltaTime);
+
+        // Rotation logic for mobile (using rotationJoystick)
+        float rotationX = rotationJoystick.Horizontal;
+        float rotationY = rotationJoystick.Vertical;
+
+        // Horizontal rotation (player)
+        if (rotationX != 0)
+        {
+            transform.Rotate(Vector3.up * rotationX * rotationSpeed * Time.deltaTime);
+        }
+
+        // Vertical rotation (camera)
+        if (rotationY != 0)
+        {
+            verticalRotation -= rotationY * rotationSpeed * Time.deltaTime;
+            verticalRotation = Mathf.Clamp(verticalRotation, -verticalRotationLimit, verticalRotationLimit);
+            cameraTransform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
+        }
+
+        // Rotation logic for mouse
+        if (Input.GetMouseButton(1)) // Right-click
+        {
+            float mouseX = Input.GetAxis("Mouse X") * rotationSpeed * Time.deltaTime;
+            float mouseY = Input.GetAxis("Mouse Y") * rotationSpeed * Time.deltaTime;
+
+            transform.Rotate(Vector3.up * mouseX);
+
+            verticalRotation -= mouseY;
+            verticalRotation = Mathf.Clamp(verticalRotation, -verticalRotationLimit, verticalRotationLimit);
+
+            cameraTransform.localRotation = Quaternion.Euler(verticalRotation, 0f, 0f);
+        }
     }
+
     public void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.tag == "Cash")
         {
-
-            
-
             ScoreManager.scoreCount += 500;
-            
         }
-        
-  
-}
+    }
+
     public void OnTriggerExit(Collider other)
     {
         if (other.gameObject.tag == "Gun")
         {
-
-           
             ScoreManager.scoreCount -= 0;
         }
     }
+
     private void Jump()
     {
         velocity.y = Mathf.Sqrt(jumpHeight * 2 * -gravity);
